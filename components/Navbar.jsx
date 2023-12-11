@@ -50,8 +50,6 @@ export default function Navbar() {
               <Link href="/startSavings">Save</Link>
 
               <Link href="/groupPage">Group Save</Link>
-
-              <Link href="/">Cosmic Provider</Link>
             </div>
           )}
 

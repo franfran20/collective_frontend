@@ -11,7 +11,12 @@ import {
   useContractWrite,
   usePrepareContractWrite,
 } from "wagmi";
-import { formatTime, getProtocolProfitImage } from "@/utils/helpers";
+import {
+  formatTime,
+  getHashLink,
+  getProgressBarColor,
+  getProtocolProfitImage,
+} from "@/utils/helpers";
 import { useState } from "react";
 
 export default function StartSaving() {
@@ -28,7 +33,7 @@ export default function StartSaving() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
-    currentChainInfo = CHAIN_INFORMATION[chain.id].avalanche;
+    currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
     collectiveAddress = currentChainInfo.collectiveAddress;
   }
 
@@ -61,12 +66,13 @@ export default function StartSaving() {
     args: [user],
   });
 
-  const { data: userSavingTimeLeft } = useContractRead({
-    address: collectiveAddress,
-    abi: COLLECTIVE_CORE_ABI,
-    functionName: "getUserTimeLeftForSavingInSeconds",
-    args: [user],
-  });
+  const { data: userSavingTimeLeft, isSuccess: userSavingTimeLeftFetched } =
+    useContractRead({
+      address: collectiveAddress,
+      abi: COLLECTIVE_CORE_ABI,
+      functionName: "getUserTimeLeftForSavingInSeconds",
+      args: [user],
+    });
 
   const { data: userSavingBalance } = useContractRead({
     address: collectiveAddress,
@@ -89,7 +95,7 @@ export default function StartSaving() {
     address: currentChainInfo && currentChainInfo.wrappedAsset,
     abi: ERC20_ABI,
     functionName: "approve",
-    args: [collectiveAddress, amount * 1e18],
+    args: [collectiveAddress, amount && amount * 1e18],
   });
   const {
     data: approveData,
@@ -99,18 +105,19 @@ export default function StartSaving() {
   } = useContractWrite(approveConfig);
 
   // start saving
-  const { config: startSavingConfig } = usePrepareContractWrite({
-    address: collectiveAddress,
-    abi: COLLECTIVE_CORE_ABI,
-    functionName: "startSavings",
-    args: [
-      currentChainInfo && currentChainInfo.wrappedAsset,
-      amount * 1e18,
-      time,
-      reason,
-      [avaxAmount * 1e18, opEthAmount * 1e18, maticAmount * 1e18],
-    ],
-  });
+  const { config: startSavingConfig, error: startSavingErr } =
+    usePrepareContractWrite({
+      address: collectiveAddress,
+      abi: COLLECTIVE_CORE_ABI,
+      functionName: "startSavings",
+      args: [
+        currentChainInfo && currentChainInfo.wrappedAsset,
+        amount && amount * 1e18,
+        time,
+        reason,
+        [avaxAmount * 1e18, opEthAmount * 1e18, maticAmount * 1e18],
+      ],
+    });
   const {
     data: startSaveTxHash,
     isLoading: loadingStartSave,
@@ -174,8 +181,38 @@ export default function StartSaving() {
     }
   }
 
+  function displayStartSavingError() {
+    if (currentChainInfo.name == "Avalanche") {
+      if (amount >= avaxAmount) {
+        return "Error: Saving Amount Is Greater Than Or Equal To Target";
+      }
+    }
+    if (currentChainInfo.name == "Optimism") {
+      if (amount >= opEthAmount) {
+        return "Error: Saving Amount Is Greater Than Or Equal To Target";
+      }
+    }
+    if (currentChainInfo.name == "Polygon") {
+      if (amount >= maticAmount) {
+        return "Error: Saving Amount Is Greater Than Or Equal To Target";
+      }
+    }
+
+    if (amount <= 0) {
+      return "Error: Amount Cannot Be Zero";
+    }
+
+    if (time <= 0) {
+      return "Error: Saving Time Cannot Be Zero";
+    }
+
+    if (avaxAmount == 0 || opEthAmount == 0 || maticAmount == 0) {
+      return "Error: Cant Have A Saving Target Of Zero";
+    }
+  }
+
   return (
-    <div>
+    <div className="save-container">
       <div className="left">
         <ClientOnly>
           {userSavingStatus && (
@@ -227,12 +264,26 @@ export default function StartSaving() {
         {/* user target */}
         <ClientOnly>
           {userSavingStatus && (
-            <div>
+            <div className="saving-balance">
               <h3>Your Savings Target </h3>
 
-              <div>
+              <div className="saving-balance-details">
                 <div>
-                  <Image src="/temp.png" width="60" height="30" />
+                  <Image src="/avaxLogo.png" width="60" height="30" />
+                  <ClientOnly>
+                    {userSavingDetails && (
+                      <p>
+                        {(
+                          userSavingDetails.savingsTarget.wAVAX.toString() /
+                          1e18
+                        ).toFixed(4)}
+                      </p>
+                    )}
+                  </ClientOnly>
+                </div>
+
+                <div>
+                  <Image src="/optimismLogo.png" width="60" height="30" />
                   <ClientOnly>
                     {userSavingDetails && (
                       <p>
@@ -245,26 +296,12 @@ export default function StartSaving() {
                 </div>
 
                 <div>
-                  <Image src="/temp.png" width="60" height="30" />
+                  <Image src="/maticLogo.png" width="60" height="30" />
                   <ClientOnly>
                     {userSavingDetails && (
                       <p>
                         {(
                           userSavingDetails.savingsTarget.wMATIC.toString() /
-                          1e18
-                        ).toFixed(4)}
-                      </p>
-                    )}
-                  </ClientOnly>
-                </div>
-
-                <div>
-                  <Image src="/temp.png" width="60" height="30" />
-                  <ClientOnly>
-                    {userSavingDetails && (
-                      <p>
-                        {(
-                          userSavingDetails.savingsTarget.wAVAX.toString() /
                           1e18
                         ).toFixed(4)}
                       </p>
@@ -281,13 +318,13 @@ export default function StartSaving() {
           {!userSavingStatus && (
             <div className="set-saving-target">
               <h3>Start Savings</h3>
-              <h5>Set Saving Target</h5>
+              <h5>Target</h5>
 
               <div className="target-input-container">
                 <div>
                   <Image src="/avaxLogo.png" width="60" height="30" />
                   <input
-                    placeholder="0.00001"
+                    placeholder="0.0000"
                     type="number"
                     onChange={(e) => setAvaxAmount(e.target.value)}
                   />
@@ -296,7 +333,7 @@ export default function StartSaving() {
                 <div>
                   <Image src="/optimismLogo.png" width="60" height="30" />
                   <input
-                    placeholder="0.00001"
+                    placeholder="0.0000"
                     type="number"
                     onChange={(e) => setOpEthAmount(e.target.value)}
                   />
@@ -305,7 +342,7 @@ export default function StartSaving() {
                 <div>
                   <Image src="/maticLogo.png" width="60" height="30" />
                   <input
-                    placeholder="0.00001"
+                    placeholder="0.0000"
                     type="number"
                     onChange={(e) => setMaticAmount(e.target.value)}
                   />
@@ -318,11 +355,17 @@ export default function StartSaving() {
         {/* progress bar */}
         <ClientOnly>
           {userSavingStatus && (
-            <div>
+            <div className="progress-bar">
               <h5>Progress Bar</h5>
               {/* redeploy and test this */}
               {progressPercent && <p>{progressPercent.toString()} %</p>}
-              <div>Im supposed to be the progress bar</div>
+              {progressPercent && (
+                <div
+                  className={`progress-bar-${getProgressBarColor(
+                    progressPercent.toString()
+                  )}`}
+                ></div>
+              )}
             </div>
           )}
         </ClientOnly>
@@ -333,15 +376,39 @@ export default function StartSaving() {
             userSavingTimeLeft &&
             userSavingTimeLeft.toString() > 0 &&
             !userMeetsSavingTarget && (
-              <div>
+              <div className="top-up-savings">
                 <h3>Top Up Savings</h3>
-                <Image src="/temp.png" width="20" height="40" />
-                <input onChange={(e) => setAmount(e.target.value)} />
-                <button onClick={() => approveAsset?.()}>Approve</button>
-                <button onClick={() => topUpSavings?.()}>Top Up</button>
-                <p>Tx Hash: {topUpSaveTxHash && topUpSaveTxHash.hash}</p>
+                <div>
+                  <Image
+                    src={getProtocolProfitImage(currentChainInfo.name)}
+                    width="20"
+                    height="40"
+                  />
+                  <input onChange={(e) => setAmount(e.target.value)} />
+                  <button
+                    onClick={() => approveAsset?.()}
+                    className="approve-button"
+                  >
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => topUpSavings?.()}
+                    className="write-button"
+                  >
+                    Top Up
+                  </button>
+                </div>
               </div>
             )}
+
+          {topUpSaveTxHash && (
+            <a
+              className="tx-hash-link"
+              href={getHashLink(topUpSaveTxHash.hash, currentChainInfo.name)}
+            >
+              Top Up Save Transaction Details &gt;
+            </a>
+          )}
         </ClientOnly>
 
         {/* start savings */}
@@ -362,33 +429,53 @@ export default function StartSaving() {
                 onChange={(e) => setReason(e.target.value)}
               />
 
-              <Image
-                src={getProtocolProfitImage(currentChainInfo.name)}
-                width="40"
-                height="20"
-              />
-              <input
-                placeholder="Amount"
-                className="amount-input"
-                onChange={(e) => setAmount(e.target.value)}
-              />
+              <div className="set-amount-container">
+                <Image
+                  src={getProtocolProfitImage(currentChainInfo.name)}
+                  width="40"
+                  height="20"
+                />
+                <input
+                  placeholder="Amount"
+                  className="amount-input"
+                  onChange={(e) => setAmount(e.target.value)}
+                />
+              </div>
+              <p style={{ margin: "10px 0px" }}>
+                Note: Always Approve The Amount You Wish To Save Before
+                Initiating Save
+              </p>
+
+              {amount && <p className="error">{displayStartSavingError()}</p>}
+
               <button
                 onClick={() => approveAsset?.()}
                 className="approve-button"
               >
                 Approve
               </button>
-              {approveData && (
-                <p>
-                  Tx Hash: {approveData && !startSaveTxHash && approveData.hash}
-                </p>
+              {approveData && !startSaveTxHash && (
+                <a
+                  className="tx-hash-link"
+                  href={getHashLink(approveData.hash, currentChainInfo.name)}
+                >
+                  Approve Transaction Details &gt;
+                </a>
               )}
 
               <button onClick={() => startSaving?.()} className="write-button">
                 Save
               </button>
               {startSaveTxHash && (
-                <p>Tx Hash: {startSaveTxHash && startSaveTxHash.hash}</p>
+                <a
+                  className="tx-hash-link"
+                  href={getHashLink(
+                    startSaveTxHash.hash,
+                    currentChainInfo.name
+                  )}
+                >
+                  Save Transaction Details &gt;
+                </a>
               )}
             </div>
           )}
@@ -399,88 +486,211 @@ export default function StartSaving() {
       <ClientOnly>
         {userSavingStatus && (
           <div className="right">
-            {/* saving reason */}
-            <ClientOnly>
-              <div>
-                <h3>Saving Reason</h3>
-                {userSavingDetails && <p>{userSavingDetails.reason}</p>}
-              </div>
-            </ClientOnly>
-
             {/* break save */}
             <ClientOnly>
-              {userSavingTimeLeft &&
-                userSavingTimeLeft.toString() > 0 &&
-                !userMeetsSavingTarget && (
-                  <div>
-                    <h2>Break Save</h2>
-                    <p>
-                      Breaking your save without reaching the intended timeline
-                      or specifioed target will lead to a fee attracted on all
-                      saved asset on withdrawal.
-                    </p>
+              {userSavingTimeLeftFetched && !userMeetsSavingTarget && (
+                <div className="break-or-withdraw-save">
+                  {/* saving reason */}
+                  <ClientOnly>
+                    <div className="saving-reason">
+                      <h3>Saving Reason</h3>
+                      {userSavingDetails && <p>{userSavingDetails.reason}</p>}
+                    </div>
+                  </ClientOnly>
 
-                    <p>
-                      Current Fee: <b>{currentChainInfo.savingFee} %</b>
-                    </p>
-
-                    <button onClick={() => breakSavings?.()}>
-                      Break Savings
-                    </button>
-                  </div>
-                )}
-            </ClientOnly>
-
-            {/* withdraw save */}
-            <ClientOnly>
-              {userSavingTimeLeft <= 0 && progressPercent.toString() >= 100 && (
-                <div>
-                  <h2>Withdraw Savings</h2>
+                  <h2>Break Save</h2>
                   <p>
-                    You've succesfully reached your savings target within the
-                    stipulated time you set. Congratulations! Withdraw your
-                    savings.
+                    Breaking your save without reaching the intended timeline or
+                    specifioed target will lead to a fee attracted on all saved
+                    asset on withdrawal.
                   </p>
 
                   <p>
-                    Current Fee: <b>0 %</b>
+                    Current Fee: <b>{currentChainInfo.savingFee} %</b>
                   </p>
 
-                  <button onClick={() => withdrawSaving?.()}>Withdraw</button>
+                  <button onClick={() => breakSavings?.()}>
+                    Break Savings
+                  </button>
                 </div>
               )}
             </ClientOnly>
 
+            {/* withdraw save */}
+            <ClientOnly>
+              {userSavingTimeLeftFetched &&
+                userSavingTimeLeft.toString() <= 0 &&
+                progressPercent.toString() >= 100 && (
+                  <div className="break-or-withdraw-save">
+                    {/* saving reason */}
+                    <ClientOnly>
+                      <div className="saving-reason">
+                        <h3>Saving Reason</h3>
+                        {userSavingDetails && <p>{userSavingDetails.reason}</p>}
+                      </div>
+                    </ClientOnly>
+
+                    <h2>Withdraw Savings</h2>
+                    <p>
+                      You've succesfully reached your savings target within the
+                      stipulated time you set. Congratulations! Withdraw your
+                      savings.
+                    </p>
+
+                    <p>
+                      Current Fee: <b>0 %</b>
+                    </p>
+
+                    <button
+                      onClick={() => withdrawSaving?.()}
+                      style={{ backgroundColor: "#4FA516" }}
+                    >
+                      Withdraw
+                    </button>
+
+                    {userSavingDetails &&
+                      userSavingDetails.withdrawalChainSelector.toString() !=
+                        currentChainInfo.chainSelector && (
+                        <p className="error">
+                          Error: Cannot Initiate Withdrawal On This Chain
+                        </p>
+                      )}
+                  </div>
+                )}
+            </ClientOnly>
+
+            {/* if user has saved completely but time hasnt arrived */}
+            <ClientOnly>
+              {userMeetsSavingTarget &&
+                userSavingTimeLeftFetched &&
+                userSavingTimeLeft.toString() > 0 &&
+                userShareInPool && (
+                  <div className="reached-target-not-time">
+                    <h3>Congratulations! You Reached Your Saving Target!</h3>
+                    <p className="reached-target-not-time-p">
+                      We're happy you've reached your saving target but you'd
+                      have to wait till the saving time is over to unlock your
+                      savings and interest.
+                    </p>
+                    <p>Thanks For Saving With Us!!</p>
+
+                    <h3>OR</h3>
+                    <p className="reached-target-not-time-p">
+                      If The funds are really important to you right now. Please
+                      feel free to break your savings.
+                    </p>
+
+                    <div className="break-or-withdraw-save">
+                      <h2>Break Save</h2>
+                      <p>
+                        Breaking your save without reaching the intended
+                        timeline or specifioed target will lead to a fee
+                        attracted on all saved asset on withdrawal.
+                      </p>
+
+                      <p>
+                        Current Fee: <b>{currentChainInfo.savingFee} %</b>
+                      </p>
+
+                      <button onClick={() => breakSavings?.()}>
+                        Break Savings
+                      </button>
+
+                      <div className="receive-from-end">
+                        <h3>How Much You'd receive</h3>
+                        <div>
+                          <div>
+                            <Image src="/avaxLogo.png" height="40" width="30" />
+                            <p>
+                              {(
+                                (userSavingBalance.wAVAX.toString() * 0.75) /
+                                1e18
+                              ).toFixed(4)}
+                            </p>
+                          </div>
+                          <div>
+                            <Image
+                              src="/optimismLogo.png"
+                              height="40"
+                              width="30"
+                            />
+                            <p>
+                              {(
+                                (userSavingBalance.wOP.toString() * 0.8) /
+                                1e18
+                              ).toFixed(4)}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div>
+                          <div>
+                            <Image
+                              src="/maticLogo.png"
+                              height="40"
+                              width="30"
+                            />
+                            <p>
+                              {(
+                                (userSavingBalance.wMATIC.toString() * 0.7) /
+                                1e18
+                              ).toFixed(4)}
+                            </p>
+                          </div>
+
+                          <div>
+                            <Image src="/usdtLogo.png" height="40" width="30" />
+                            <p>{(0).toFixed(4)}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+            </ClientOnly>
+
             {/* how much the user would receive on Break */}
             <ClientOnly>
-              {userSavingTimeLeft &&
-                userSavingTimeLeft.toString() > 0 &&
-                !userMeetsSavingTarget &&
+              {!userMeetsSavingTarget &&
                 userSavingBalance &&
                 userShareInPool && (
-                  <div>
+                  <div className="receive-from-end">
                     <h3>How Much You'd receive</h3>
                     <div>
                       <div>
-                        <Image src="/temp.png" height="40" width="30" />
+                        <Image src="/avaxLogo.png" height="40" width="30" />
                         <p>
-                          {(userSavingBalance.wAVAX.toString() * 0.75) / 1e18}
+                          {(
+                            (userSavingBalance.wAVAX.toString() * 0.75) /
+                            1e18
+                          ).toFixed(4)}
                         </p>
                       </div>
                       <div>
-                        <Image src="/temp.png" height="40" width="30" />
-                        <p>{(userSavingBalance.wOP.toString() * 0.8) / 1e18}</p>
-                      </div>
-                      <div>
-                        <Image src="/temp.png" height="40" width="30" />
+                        <Image src="/optimismLogo.png" height="40" width="30" />
                         <p>
-                          {(userSavingBalance.wAVAX.toString() * 0.7) / 1e18}
+                          {(
+                            (userSavingBalance.wOP.toString() * 0.8) /
+                            1e18
+                          ).toFixed(4)}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div>
+                      <div>
+                        <Image src="/maticLogo.png" height="40" width="30" />
+                        <p>
+                          {(
+                            (userSavingBalance.wMATIC.toString() * 0.7) /
+                            1e18
+                          ).toFixed(4)}
                         </p>
                       </div>
 
                       <div>
-                        <Image src="/temp.png" height="40" width="30" />
-                        <p>0</p>
+                        <Image src="/usdtLogo.png" height="40" width="30" />
+                        <p>{(0).toFixed(4)}</p>
                       </div>
                     </div>
                   </div>
@@ -489,30 +699,40 @@ export default function StartSaving() {
 
             {/* how much the user would receive on withdrawal */}
             <ClientOnly>
-              {userSavingTimeLeft &&
+              {userSavingTimeLeftFetched &&
                 userSavingTimeLeft.toString() <= 0 &&
                 userMeetsSavingTarget &&
                 userSavingBalance &&
                 userShareInPool && (
-                  <div>
+                  <div className="receive-from-end">
                     <h3>How Much You'd receive</h3>
                     <div>
                       <div>
-                        <Image src="/temp.png" height="40" width="30" />
-                        <p>{userSavingBalance.wAVAX.toString()}</p>
+                        <Image src="/avaxLogo.png" height="40" width="30" />
+                        <p>
+                          {(userSavingBalance.wAVAX.toString() / 1e18).toFixed(
+                            4
+                          )}
+                        </p>
                       </div>
                       <div>
-                        <Image src="/temp.png" height="40" width="30" />
-                        <p>{userSavingBalance.wOP.toString()}</p>
+                        <Image src="/optimismLogo.png" height="40" width="30" />
+                        <p>
+                          {(userSavingBalance.wOP.toString() / 1e18).toFixed(4)}
+                        </p>
                       </div>
                       <div>
-                        <Image src="/temp.png" height="40" width="30" />
-                        <p>{userSavingBalance.wAVAX.toString()}</p>
+                        <Image src="/maticLogo.png" height="40" width="30" />
+                        <p>
+                          {(userSavingBalance.wMATIC.toString() / 1e18).toFixed(
+                            4
+                          )}
+                        </p>
                       </div>
 
                       <div>
-                        <Image src="/temp.png" height="40" width="30" />
-                        <p>{userShareInPool.toString() / 1e18}</p>
+                        <Image src="/usdtLogo.png" height="40" width="30" />
+                        <p>{(userShareInPool.toString() / 1e18).toFixed(4)}</p>
                       </div>
                     </div>
                   </div>

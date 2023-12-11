@@ -8,7 +8,7 @@ import { useAccount, useConnect, useNetwork, useContractRead } from "wagmi";
 import { CHAIN_INFORMATION } from "@/utils/ChainInformation";
 import { COLLECTIVE_CORE_ABI } from "@/utils/abi";
 import ClientOnly from "@/components/ClientOnly";
-import { getProtocolProfitImage } from "@/utils/helpers";
+import { formatTime, getProtocolProfitImage } from "@/utils/helpers";
 
 export default function Dashboard() {
   const { chain } = useNetwork();
@@ -152,9 +152,8 @@ export default function Dashboard() {
               <div>
                 <p>
                   {totalExpectedSaveTime
-                    ? totalExpectedSaveTime.toString()
+                    ? formatTime(totalExpectedSaveTime.toString())
                     : "0 "}
-                  seconds
                 </p>
               </div>
             </div>

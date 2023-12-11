@@ -92,3 +92,30 @@ export function getProtocolProfitImage(chainName) {
     return "/maticLogo.png";
   }
 }
+
+export function getHashLink(hash, chainName) {
+  if (chainName == "Avalanche") {
+    return `https://testnet.snowtrace.io/tx/${hash}`;
+  }
+  if (chainName == "Optimism") {
+    return `https://goerli-optimism.etherscan.io/tx/${hash}`;
+  }
+  if (chainName == "Polygon") {
+    return `https://mumbai.polygonscan.com/tx/${hash}`;
+  }
+}
+
+export function getProgressBarColor(progressPercent) {
+  if (progressPercent < 50) {
+    return "red";
+  }
+  if (progressPercent > 50 && progressPercent < 75) {
+    return "yellow";
+  }
+  if ((progressPercent > 75) & (progressPercent < 100)) {
+    return "teal";
+  }
+  if (progressPercent >= 100) {
+    return "green";
+  }
+}

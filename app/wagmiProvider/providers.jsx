@@ -34,6 +34,9 @@ const { chains, publicClient, webSocketPublicClient } = configureChains(
 
 const config = createConfig({
   autoConnect: true,
+  logger: {
+    warn: null,
+  },
   connectors: [new InjectedConnector()],
   publicClient,
   webSocketPublicClient,
