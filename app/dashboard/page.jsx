@@ -16,7 +16,10 @@ export default function Dashboard() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
-    currentChainInfo = CHAIN_INFORMATION[chain.id].avalanche;
+    // currentChainInfo = CHAIN_INFORMATION[chain.id].avalanche;
+    // currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
+    currentChainInfo = CHAIN_INFORMATION[chain.id];
+
     collectiveAddress = currentChainInfo.collectiveAddress;
     console.log(currentChainInfo.collectiveAddress);
   }
@@ -164,7 +167,9 @@ export default function Dashboard() {
               <h5>Protocol Profit</h5>
               <div>
                 <Image
-                  src={getProtocolProfitImage(currentChainInfo.name)}
+                  src={getProtocolProfitImage(
+                    currentChainInfo && currentChainInfo.name
+                  )}
                   width="40"
                   height="60"
                 />

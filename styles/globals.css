@@ -797,6 +797,38 @@ input:focus {
   margin: 10px 0px;
 }
 
+.faucet {
+  width: 85%;
+  margin: 10px auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.faucet h3 {
+  font-size: 24px;
+}
+
+.faucet button {
+  background-color: #028dbb;
+  color: #fff;
+  padding: 10px 13px;
+  border-radius: 8px;
+  width: 200px;
+  margin: 10px 0px;
+}
+
+.faucet input {
+  background-color: #141d27;
+  border-radius: 10px;
+  color: #fff;
+  font-size: 17px;
+  padding: 12px 10px;
+  outline: none;
+  border: none;
+  width: 300px;
+  margin: 10px 0px;
+}
+
 @media (max-width: 1200px) {
   .mobile-not-supported {
     display: block;

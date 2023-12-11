@@ -17,7 +17,7 @@ export default function Navbar() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
-    currentChainInfo = CHAIN_INFORMATION[chain.id].avalanche;
+    currentChainInfo = CHAIN_INFORMATION[chain.id];
     collectiveAddress = currentChainInfo.collectiveAddress;
     console.log(currentChainInfo.collectiveAddress);
   }
@@ -50,6 +50,8 @@ export default function Navbar() {
               <Link href="/startSavings">Save</Link>
 
               <Link href="/groupPage">Group Save</Link>
+
+              <Link href="/faucet">Faucet</Link>
             </div>
           )}
 

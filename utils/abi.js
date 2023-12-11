@@ -200,6 +200,13 @@ export const COLLECTIVE_CORE_ABI = [
   },
   {
     type: "function",
+    name: "getGroupDispatchStatus",
+    inputs: [{ name: "groupID", type: "uint256", internalType: "uint256" }],
+    outputs: [{ name: "", type: "bool", internalType: "bool" }],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getGroupSavingCompletionPercentage",
     inputs: [{ name: "groupID", type: "uint256", internalType: "uint256" }],
     outputs: [{ name: "", type: "uint256", internalType: "uint256" }],
@@ -1013,6 +1020,22 @@ export const ERC20_ABI = [
   {
     inputs: [
       {
+        internalType: "string",
+        name: "name",
+        type: "string",
+      },
+      {
+        internalType: "string",
+        name: "symbol",
+        type: "string",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "spender",
         type: "address",
@@ -1214,6 +1237,24 @@ export const ERC20_ABI = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "burn",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "decimals",
     outputs: [
@@ -1224,6 +1265,24 @@ export const ERC20_ABI = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "user",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "mint",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {

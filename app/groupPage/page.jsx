@@ -7,6 +7,7 @@ import {
   formatTime,
   getGrouProgressPercent,
   getGroupSavingTimeLeft,
+  getHashLink,
   getProgressBarColor,
   getProtocolProfitImage,
   truncateEthereumAddress,
@@ -41,7 +42,10 @@ export default function GroupSavings() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
-    currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
+    // currentChainInfo = CHAIN_INFORMATION[chain.id].avalanche;
+    // currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
+    currentChainInfo = CHAIN_INFORMATION[chain.id];
+
     collectiveAddress = currentChainInfo.collectiveAddress;
     console.log(currentChainInfo.collectiveAddress);
     console.log(selectedGroup);
@@ -154,6 +158,13 @@ export default function GroupSavings() {
     abi: COLLECTIVE_CORE_ABI,
     functionName: "getUserMemebrshipStatus",
     args: [selectedGroup & selectedGroup, user && user],
+  });
+
+  const { data: groupDispatchStatus } = useContractRead({
+    address: collectiveAddress,
+    abi: COLLECTIVE_CORE_ABI,
+    functionName: "getGroupDispatchStatus",
+    args: [selectedGroup & selectedGroup],
   });
 
   function displayStartSavingError() {
@@ -282,6 +293,8 @@ export default function GroupSavings() {
                     }
                   }
                 })}
+
+              {allGroups && allGroups.length == 0 && <p>No Group Exists</p>}
             </ClientOnly>
           )}
 
@@ -290,11 +303,12 @@ export default function GroupSavings() {
             <ClientOnly>
               {allGroups &&
                 currentTimeStamp &&
-                allGroups.map((group) => {
+                allGroups.map((group, index) => {
+                  let counter = 0;
                   if (
                     parseInt(group.savingStopTime) < parseInt(currentTimeStamp)
                   ) {
-                    let counter = 0;
+                    counter += 1;
                     return (
                       <div
                         className="group-box"
@@ -320,12 +334,14 @@ export default function GroupSavings() {
                     );
                   }
 
-                  if (index + 1 == allGroups.length) {
+                  if (index + 2 == allGroups.length) {
                     if (counter == 0) {
                       return <div>No Completed Group Savings</div>;
                     }
                   }
                 })}
+
+              {allGroups && allGroups.length == 0 && <p>No Group Exists</p>}
             </ClientOnly>
           )}
 
@@ -388,6 +404,15 @@ export default function GroupSavings() {
                 >
                   Approve
                 </button>
+                {approveData && (
+                  <a
+                    className="tx-hash-link"
+                    target="_blank"
+                    href={getHashLink(approveData.hash, currentChainInfo.name)}
+                  >
+                    Approve Transaction Details &gt;
+                  </a>
+                )}
                 <p style={{ margin: "10px 0px" }}>
                   Note: Always Approve The Amount You Wish To Save Before
                   Initiating Save
@@ -398,6 +423,19 @@ export default function GroupSavings() {
                 >
                   Create Group
                 </button>
+
+                {createGroupData && (
+                  <a
+                    className="tx-hash-link"
+                    target="_blank"
+                    href={getHashLink(
+                      createGroupData.hash,
+                      currentChainInfo.name
+                    )}
+                  >
+                    Create Transaction Details &gt;
+                  </a>
+                )}
 
                 {amount && <p className="error">{displayStartSavingError()}</p>}
 
@@ -474,16 +512,16 @@ export default function GroupSavings() {
                     allGroups[selectedGroup - 1].target
                   ) < 100 && (
                     <div className="withdraw-contribution">
-                      {userContributionToGroup.wAVAX.toString() > 0 &&
-                        userContributionToGroup.wOP.toString() > 0 &&
-                        userContributionToGroup.wMATIC.toString() > 0 && (
-                          <button
-                            onClick={() => claimGroupContribution?.()}
-                            className="write-button-withdraw"
-                          >
-                            Withdraw Contribution
-                          </button>
-                        )}
+                      {(userContributionToGroup.wAVAX.toString() > 0 ||
+                        userContributionToGroup.wOP.toString() > 0 ||
+                        userContributionToGroup.wMATIC.toString() > 0) && (
+                        <button
+                          onClick={() => claimGroupContribution?.()}
+                          className="write-button-withdraw"
+                        >
+                          Withdraw Contribution
+                        </button>
+                      )}
                       <p>
                         Current Fee: <b>{currentChainInfo.savingFee}</b> %
                       </p>
@@ -496,7 +534,8 @@ export default function GroupSavings() {
                     allGroups[selectedGroup - 1].amountRaised,
                     allGroups[selectedGroup - 1].target
                   ) >= 100 &&
-                  userMemeberStatus && (
+                  userMemeberStatus &&
+                  !groupDispatchStatus && (
                     <ClientOnly>
                       <div className="dispatch-saving">
                         <button

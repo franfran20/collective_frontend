@@ -33,7 +33,10 @@ export default function StartSaving() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
-    currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
+    currentChainInfo = CHAIN_INFORMATION[chain.id];
+    // currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
+    // currentChainInfo = CHAIN_INFORMATION[chain.id].polygon;
+
     collectiveAddress = currentChainInfo.collectiveAddress;
   }
 
@@ -52,12 +55,13 @@ export default function StartSaving() {
     args: [user],
   });
 
-  const { data: userShareInPool } = useContractRead({
-    address: collectiveAddress,
-    abi: COLLECTIVE_CORE_ABI,
-    functionName: "getUsersShareInInterestPool",
-    args: [user],
-  });
+  const { data: userShareInPool, isSuccess: fetchedUserShareInPool } =
+    useContractRead({
+      address: collectiveAddress,
+      abi: COLLECTIVE_CORE_ABI,
+      functionName: "getUsersShareInInterestPool",
+      args: [user],
+    });
 
   const { data: userSavingDetails } = useContractRead({
     address: collectiveAddress,
@@ -95,7 +99,7 @@ export default function StartSaving() {
     address: currentChainInfo && currentChainInfo.wrappedAsset,
     abi: ERC20_ABI,
     functionName: "approve",
-    args: [collectiveAddress, amount && amount * 1e18],
+    args: [collectiveAddress, amount * 1e18],
   });
   const {
     data: approveData,
@@ -112,7 +116,7 @@ export default function StartSaving() {
       functionName: "startSavings",
       args: [
         currentChainInfo && currentChainInfo.wrappedAsset,
-        amount && amount * 1e18,
+        amount * 1e18,
         time,
         reason,
         [avaxAmount * 1e18, opEthAmount * 1e18, maticAmount * 1e18],
@@ -218,7 +222,12 @@ export default function StartSaving() {
           {userSavingStatus && (
             <div className="time-left">
               <h4>Time Left</h4>
-              <p>{formatTime(userSavingTimeLeft.toString())} Left</p>
+              {userSavingTimeLeft && (
+                <p>
+                  {formatTime(userSavingTimeLeft.toString())}
+                  Left
+                </p>
+              )}
             </div>
           )}
         </ClientOnly>
@@ -404,6 +413,7 @@ export default function StartSaving() {
           {topUpSaveTxHash && (
             <a
               className="tx-hash-link"
+              target="_blank"
               href={getHashLink(topUpSaveTxHash.hash, currentChainInfo.name)}
             >
               Top Up Save Transaction Details &gt;
@@ -431,7 +441,9 @@ export default function StartSaving() {
 
               <div className="set-amount-container">
                 <Image
-                  src={getProtocolProfitImage(currentChainInfo.name)}
+                  src={getProtocolProfitImage(
+                    currentChainInfo && currentChainInfo.name
+                  )}
                   width="40"
                   height="20"
                 />
@@ -457,6 +469,7 @@ export default function StartSaving() {
               {approveData && !startSaveTxHash && (
                 <a
                   className="tx-hash-link"
+                  target="_blank"
                   href={getHashLink(approveData.hash, currentChainInfo.name)}
                 >
                   Approve Transaction Details &gt;
@@ -469,6 +482,7 @@ export default function StartSaving() {
               {startSaveTxHash && (
                 <a
                   className="tx-hash-link"
+                  target="_blank"
                   href={getHashLink(
                     startSaveTxHash.hash,
                     currentChainInfo.name
@@ -552,7 +566,8 @@ export default function StartSaving() {
                       userSavingDetails.withdrawalChainSelector.toString() !=
                         currentChainInfo.chainSelector && (
                         <p className="error">
-                          Error: Cannot Initiate Withdrawal On This Chain
+                          Error: Cannot Initiate Withdrawal On This Chain: Not
+                          Your Save Chain
                         </p>
                       )}
                   </div>
@@ -564,7 +579,7 @@ export default function StartSaving() {
               {userMeetsSavingTarget &&
                 userSavingTimeLeftFetched &&
                 userSavingTimeLeft.toString() > 0 &&
-                userShareInPool && (
+                fetchedUserShareInPool && (
                   <div className="reached-target-not-time">
                     <h3>Congratulations! You Reached Your Saving Target!</h3>
                     <p className="reached-target-not-time-p">
