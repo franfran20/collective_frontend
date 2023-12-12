@@ -7,7 +7,7 @@ import Link from "next/link";
 
 import { useAccount, useConnect, useNetwork, useContractRead } from "wagmi";
 import { CHAIN_INFORMATION } from "@/utils/ChainInformation";
-import { truncateEthereumAddress } from "@/utils/helpers";
+import { CURRENTCHAIN, truncateEthereumAddress } from "@/utils/helpers";
 
 export default function Navbar() {
   const { isConnected, address: user } = useAccount();
@@ -17,7 +17,9 @@ export default function Navbar() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
+    // currentChainInfo = CHAIN_INFORMATION[chain.id][CURRENTCHAIN];
     currentChainInfo = CHAIN_INFORMATION[chain.id];
+
     collectiveAddress = currentChainInfo.collectiveAddress;
     console.log(currentChainInfo.collectiveAddress);
   }

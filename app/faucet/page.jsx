@@ -3,7 +3,7 @@
 import ClientOnly from "@/components/ClientOnly";
 import { CHAIN_INFORMATION } from "@/utils/ChainInformation";
 import { ERC20_ABI } from "@/utils/abi";
-import { getHashLink } from "@/utils/helpers";
+import { CURRENTCHAIN, getHashLink } from "@/utils/helpers";
 import { useState } from "react";
 import { useContractWrite, useNetwork, usePrepareContractWrite } from "wagmi";
 
@@ -15,7 +15,9 @@ export default function Faucet() {
   let tokenAddress;
   let currentChainInfo;
   if (chain) {
+    // currentChainInfo = CHAIN_INFORMATION[chain.id][CURRENTCHAIN];
     currentChainInfo = CHAIN_INFORMATION[chain.id];
+
     tokenAddress = currentChainInfo.wrappedAsset;
     console.log(currentChainInfo.wrappedAsset);
   }

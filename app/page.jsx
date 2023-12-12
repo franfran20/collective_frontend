@@ -11,7 +11,7 @@ export default function Home() {
         on withrawals being redistributed to other users who meet their target.
       </p>
       <div>
-        <button>Read The Docs</button>
+        <button>Learn More &gt;</button>
       </div>
     </div>
   );

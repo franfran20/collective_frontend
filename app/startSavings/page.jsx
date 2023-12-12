@@ -12,6 +12,7 @@ import {
   usePrepareContractWrite,
 } from "wagmi";
 import {
+  CURRENTCHAIN,
   formatTime,
   getHashLink,
   getProgressBarColor,
@@ -33,9 +34,8 @@ export default function StartSaving() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
+    // currentChainInfo = CHAIN_INFORMATION[chain.id][CURRENTCHAIN];
     currentChainInfo = CHAIN_INFORMATION[chain.id];
-    // currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
-    // currentChainInfo = CHAIN_INFORMATION[chain.id].polygon;
 
     collectiveAddress = currentChainInfo.collectiveAddress;
   }
@@ -94,20 +94,6 @@ export default function StartSaving() {
 
   // WRITE FUNCTIONS
 
-  // approve
-  const { config: approveConfig } = usePrepareContractWrite({
-    address: currentChainInfo && currentChainInfo.wrappedAsset,
-    abi: ERC20_ABI,
-    functionName: "approve",
-    args: [collectiveAddress, amount * 1e18],
-  });
-  const {
-    data: approveData,
-    isLoading: loadingApprove,
-    error: approveError,
-    write: approveAsset,
-  } = useContractWrite(approveConfig);
-
   // start saving
   const { config: startSavingConfig, error: startSavingErr } =
     usePrepareContractWrite({
@@ -116,7 +102,7 @@ export default function StartSaving() {
       functionName: "startSavings",
       args: [
         currentChainInfo && currentChainInfo.wrappedAsset,
-        amount * 1e18,
+        amount && amount * 1e18,
         time,
         reason,
         [avaxAmount * 1e18, opEthAmount * 1e18, maticAmount * 1e18],
@@ -125,17 +111,32 @@ export default function StartSaving() {
   const {
     data: startSaveTxHash,
     isLoading: loadingStartSave,
-    error: startSavingError,
     write: startSaving,
   } = useContractWrite(startSavingConfig);
 
+  // approve
+  const { config: approveConfig } = usePrepareContractWrite({
+    address: currentChainInfo && currentChainInfo.wrappedAsset,
+    abi: ERC20_ABI,
+    functionName: "approve",
+    args: [collectiveAddress, amount && amount * 1e18],
+  });
+  const {
+    data: approveData,
+    isLoading: loadingApprove,
+    error: approveError,
+    write: approveAsset,
+  } = useContractWrite(approveConfig);
+
   // top savings
-  // topUpSavings(address asset, uint256 amount)
   const { config: topUpSavingsConfig } = usePrepareContractWrite({
     address: collectiveAddress,
     abi: COLLECTIVE_CORE_ABI,
     functionName: "topUpSavings",
-    args: [currentChainInfo && currentChainInfo.wrappedAsset, amount * 1e18],
+    args: [
+      currentChainInfo && currentChainInfo.wrappedAsset,
+      amount && amount * 1e18,
+    ],
   });
   const {
     data: topUpSaveTxHash,
@@ -222,10 +223,11 @@ export default function StartSaving() {
           {userSavingStatus && (
             <div className="time-left">
               <h4>Time Left</h4>
-              {userSavingTimeLeft && (
+              {userSavingTimeLeftFetched && (
                 <p>
-                  {formatTime(userSavingTimeLeft.toString())}
-                  Left
+                  {userSavingTimeLeft.toString() == "0"
+                    ? "Ended"
+                    : formatTime(userSavingTimeLeft.toString())}
                 </p>
               )}
             </div>
@@ -459,6 +461,17 @@ export default function StartSaving() {
               </p>
 
               {amount && <p className="error">{displayStartSavingError()}</p>}
+              {startSavingErr &&
+                startSavingErr.message &&
+                startSavingErr.message.includes("0xfb8f41b2") && (
+                  <p className="error">Insufficient Token Approval</p>
+                )}
+
+              {startSavingErr &&
+                startSavingErr.message &&
+                startSavingErr.message.includes("0xe450d38c") && (
+                  <p className="error">Insufficient Token Balance</p>
+                )}
 
               <button
                 onClick={() => approveAsset?.()}
@@ -479,6 +492,7 @@ export default function StartSaving() {
               <button onClick={() => startSaving?.()} className="write-button">
                 Save
               </button>
+
               {startSaveTxHash && (
                 <a
                   className="tx-hash-link"
@@ -668,7 +682,7 @@ export default function StartSaving() {
             <ClientOnly>
               {!userMeetsSavingTarget &&
                 userSavingBalance &&
-                userShareInPool && (
+                fetchedUserShareInPool && (
                   <div className="receive-from-end">
                     <h3>How Much You'd receive</h3>
                     <div>
@@ -718,7 +732,7 @@ export default function StartSaving() {
                 userSavingTimeLeft.toString() <= 0 &&
                 userMeetsSavingTarget &&
                 userSavingBalance &&
-                userShareInPool && (
+                fetchedUserShareInPool && (
                   <div className="receive-from-end">
                     <h3>How Much You'd receive</h3>
                     <div>

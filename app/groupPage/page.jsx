@@ -4,6 +4,7 @@ import ClientOnly from "@/components/ClientOnly";
 import { CHAIN_INFORMATION } from "@/utils/ChainInformation";
 import { COLLECTIVE_CORE_ABI, ERC20_ABI } from "@/utils/abi";
 import {
+  CURRENTCHAIN,
   formatTime,
   getGrouProgressPercent,
   getGroupSavingTimeLeft,
@@ -42,8 +43,7 @@ export default function GroupSavings() {
   let collectiveAddress;
   let currentChainInfo;
   if (chain) {
-    // currentChainInfo = CHAIN_INFORMATION[chain.id].avalanche;
-    // currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
+    // currentChainInfo = CHAIN_INFORMATION[chain.id][CURRENTCHAIN];
     currentChainInfo = CHAIN_INFORMATION[chain.id];
 
     collectiveAddress = currentChainInfo.collectiveAddress;
@@ -54,26 +54,26 @@ export default function GroupSavings() {
   // write functions
 
   // create
-  const { config: createGroupConfig } = usePrepareContractWrite({
-    address: collectiveAddress,
-    abi: COLLECTIVE_CORE_ABI,
-    functionName: "createGroupSavings",
-    args: [
-      amount && amount * 1e18,
-      groupReason,
-      groupRecipient,
-      groupTime,
-      [
-        createAvaxTarget * 1e18,
-        createOpEthTarget * 1e18,
-        createMaticTarget * 1e18,
+  const { config: createGroupConfig, error: createGroupError } =
+    usePrepareContractWrite({
+      address: collectiveAddress,
+      abi: COLLECTIVE_CORE_ABI,
+      functionName: "createGroupSavings",
+      args: [
+        amount && amount * 1e18,
+        groupReason,
+        groupRecipient,
+        groupTime,
+        [
+          createAvaxTarget * 1e18,
+          createOpEthTarget * 1e18,
+          createMaticTarget * 1e18,
+        ],
       ],
-    ],
-  });
+    });
   const {
     data: createGroupData,
     isLoading: createGroupLoading,
-    error: createGroupError,
     write: createGroup,
   } = useContractWrite(createGroupConfig);
 
@@ -120,18 +120,14 @@ export default function GroupSavings() {
   } = useContractWrite(approveConfig);
 
   // contribute
-  const { config: contributeConfig } = usePrepareContractWrite({
-    address: collectiveAddress,
-    abi: COLLECTIVE_CORE_ABI,
-    functionName: "contributeToGroup",
-    args: [selectedGroup && selectedGroup, amount && amount * 1e18],
-  });
-  const {
-    data: contributeData,
-    isLoading: contributeLoading,
-    error: contributeError,
-    write: contribute,
-  } = useContractWrite(contributeConfig);
+  const { config: contributeConfig, error: contributeGroupErr } =
+    usePrepareContractWrite({
+      address: collectiveAddress,
+      abi: COLLECTIVE_CORE_ABI,
+      functionName: "contributeToGroup",
+      args: [selectedGroup && selectedGroup, amount && amount * 1e18],
+    });
+  const { write: contribute } = useContractWrite(contributeConfig);
 
   // read functions
   const { data: userContributionToGroup } = useContractRead({
@@ -167,7 +163,7 @@ export default function GroupSavings() {
     args: [selectedGroup & selectedGroup],
   });
 
-  function displayStartSavingError() {
+  function displayCreateGroupError() {
     if (currentChainInfo.name == "Avalanche") {
       if (amount >= createAvaxTarget) {
         return "Error: Saving Amount Is Greater Than Or Equal To Target";
@@ -398,6 +394,24 @@ export default function GroupSavings() {
                     />
                   </div>
                 </div>
+
+                {createGroupError &&
+                  createGroupError.message &&
+                  createGroupError.message.includes("0xfb8f41b2") && (
+                    <p className="error">Insufficient Token Approval</p>
+                  )}
+
+                {createGroupError &&
+                  createGroupError.message &&
+                  createGroupError.message.includes("0xe450d38c") && (
+                    <p className="error">Insufficient Token Balance</p>
+                  )}
+
+                <p style={{ margin: "10px 0px" }}>
+                  Note: Always Approve The Amount You Wish To Save Before
+                  Initiating Save
+                </p>
+
                 <button
                   onClick={() => approveAsset?.()}
                   className="approve-button"
@@ -413,10 +427,7 @@ export default function GroupSavings() {
                     Approve Transaction Details &gt;
                   </a>
                 )}
-                <p style={{ margin: "10px 0px" }}>
-                  Note: Always Approve The Amount You Wish To Save Before
-                  Initiating Save
-                </p>
+
                 <button
                   onClick={() => createGroup?.()}
                   className="write-button-create"
@@ -437,7 +448,7 @@ export default function GroupSavings() {
                   </a>
                 )}
 
-                {amount && <p className="error">{displayStartSavingError()}</p>}
+                {amount && <p className="error">{displayCreateGroupError()}</p>}
 
                 {currentChainInfo &&
                   currentChainInfo.chainSelector !=
@@ -565,6 +576,12 @@ export default function GroupSavings() {
                         alt="asset-logo"
                       />
                       <input onChange={(e) => setAmount(e.target.value)} />
+
+                      {contributeGroupErr &&
+                        contributeGroupErr.message &&
+                        contributeGroupErr.message.includes("0xfb8f41b2") && (
+                          <p className="error">Insufficient Token Approval</p>
+                        )}
                       <button
                         onClick={() => approveAsset?.()}
                         className="approve-button"

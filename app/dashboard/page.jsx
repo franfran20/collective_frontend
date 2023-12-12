@@ -8,16 +8,20 @@ import { useAccount, useConnect, useNetwork, useContractRead } from "wagmi";
 import { CHAIN_INFORMATION } from "@/utils/ChainInformation";
 import { COLLECTIVE_CORE_ABI } from "@/utils/abi";
 import ClientOnly from "@/components/ClientOnly";
-import { formatTime, getProtocolProfitImage } from "@/utils/helpers";
+import {
+  CURRENTCHAIN,
+  formatTime,
+  getProtocolProfitImage,
+} from "@/utils/helpers";
 
 export default function Dashboard() {
   const { chain } = useNetwork();
 
   let collectiveAddress;
   let currentChainInfo;
+
   if (chain) {
-    // currentChainInfo = CHAIN_INFORMATION[chain.id].avalanche;
-    // currentChainInfo = CHAIN_INFORMATION[chain.id].optimism;
+    // currentChainInfo = CHAIN_INFORMATION[chain.id][CURRENTCHAIN];
     currentChainInfo = CHAIN_INFORMATION[chain.id];
 
     collectiveAddress = currentChainInfo.collectiveAddress;
@@ -30,11 +34,12 @@ export default function Dashboard() {
     functionName: "getTotalChainSavings",
   });
 
-  const { data: interestPoolBalance } = useContractRead({
-    address: collectiveAddress,
-    abi: COLLECTIVE_CORE_ABI,
-    functionName: "getInterestPoolBalance",
-  });
+  const { data: interestPoolBalance, isSuccess: fetchInterestPoolBalance } =
+    useContractRead({
+      address: collectiveAddress,
+      abi: COLLECTIVE_CORE_ABI,
+      functionName: "getInterestPoolBalance",
+    });
 
   const { data: protocolProfitOnThisChain } = useContractRead({
     address: collectiveAddress,
@@ -48,11 +53,12 @@ export default function Dashboard() {
     functionName: "getTotalExpectedSaveTime",
   });
 
-  const { data: totalChainSavers } = useContractRead({
-    address: collectiveAddress,
-    abi: COLLECTIVE_CORE_ABI,
-    functionName: "getTotalChainSavers",
-  });
+  const { data: totalChainSavers, isSuccess: totalChainSaversFetched } =
+    useContractRead({
+      address: collectiveAddress,
+      abi: COLLECTIVE_CORE_ABI,
+      functionName: "getTotalChainSavers",
+    });
 
   const { data: usdtBalances } = useContractRead({
     address: collectiveAddress,
@@ -132,7 +138,7 @@ export default function Dashboard() {
               <div>
                 <Image src="/usdtLogo.png" width="40" height="60" />
                 <p>
-                  {interestPoolBalance
+                  {fetchInterestPoolBalance
                     ? (interestPoolBalance.toString() / 1e18).toFixed(4)
                     : (0).toFixed(4)}
                 </p>
@@ -144,7 +150,9 @@ export default function Dashboard() {
             <div className="statBox">
               <h5>Total Savers</h5>
               <div>
-                <p>{totalChainSavers ? totalChainSavers.toString() : "0"}</p>
+                <p>
+                  {totalChainSaversFetched ? totalChainSavers.toString() : "0"}
+                </p>
               </div>
             </div>
           </ClientOnly>

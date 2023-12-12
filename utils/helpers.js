@@ -119,3 +119,5 @@ export function getProgressBarColor(progressPercent) {
     return "green";
   }
 }
+
+export const CURRENTCHAIN = "avalanche";
