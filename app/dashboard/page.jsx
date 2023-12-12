@@ -77,19 +77,34 @@ export default function Dashboard() {
               <h4>Amount Saved On Each Chain</h4>
               <div className="amount-saved-container">
                 <div className="amount-saved">
-                  <Image src="/avaxLogo.png" width="60" height="30" />
+                  <Image
+                    src="/avaxLogo.png"
+                    width="60"
+                    height="30"
+                    alt="avaxLogo"
+                  />
                   <p>
                     {(totalChainSavings.wAVAX.toString() / 1e18).toFixed(4)}
                   </p>
                 </div>
 
                 <div className="amount-saved">
-                  <Image src="/optimismLogo.png" width="60" height="30" />
+                  <Image
+                    src="/optimismLogo.png"
+                    width="60"
+                    height="30"
+                    alt="opLogo"
+                  />
                   <p>{(totalChainSavings.wOP.toString() / 1e18).toFixed(4)}</p>
                 </div>
 
                 <div className="amount-saved">
-                  <Image src="/maticLogo.png" width="60" height="30" />
+                  <Image
+                    src="/maticLogo.png"
+                    width="60"
+                    height="30"
+                    alt="maticLogo"
+                  />
                   <p>
                     {(totalChainSavings.wMATIC.toString() / 1e18).toFixed(4)}
                   </p>
@@ -103,7 +118,12 @@ export default function Dashboard() {
               <div className="usdtBalance">
                 <h4>Avalanche</h4>
                 <div className="usdt-amount">
-                  <Image src="/usdtLogo.png" width="60" height="30" />
+                  <Image
+                    src="/usdtLogo.png"
+                    width="60"
+                    height="30"
+                    alt="usdtLogo"
+                  />
                   <p>{(usdtBalances.Avalanche.toString() / 1e18).toFixed(2)}</p>
                 </div>
               </div>
@@ -111,7 +131,12 @@ export default function Dashboard() {
               <div className="usdtBalance">
                 <h4>Optimism</h4>
                 <div className="usdt-amount">
-                  <Image src="/usdtLogo.png" width="60" height="30" />
+                  <Image
+                    src="/usdtLogo.png"
+                    width="60"
+                    height="30"
+                    alt="usdtLogo"
+                  />
                   <p>{(usdtBalances.Optimism.toString() / 1e18).toFixed(2)}</p>
                 </div>
               </div>
@@ -119,7 +144,12 @@ export default function Dashboard() {
               <div className="usdtBalance">
                 <h4>Polygon</h4>
                 <div className="usdt-amount">
-                  <Image src="/usdtLogo.png" width="60" height="30" />
+                  <Image
+                    src="/usdtLogo.png"
+                    width="60"
+                    height="30"
+                    alt="usdtLogo"
+                  />
                   <p>{(usdtBalances.Polygon.toString() / 1e18).toFixed(2)}</p>
                 </div>
               </div>
@@ -136,7 +166,12 @@ export default function Dashboard() {
             <div className="statBox">
               <h5>Total Collective Interest</h5>
               <div>
-                <Image src="/usdtLogo.png" width="40" height="60" />
+                <Image
+                  src="/usdtLogo.png"
+                  width="40"
+                  height="60"
+                  alt="usdtLogo"
+                />
                 <p>
                   {fetchInterestPoolBalance
                     ? (interestPoolBalance.toString() / 1e18).toFixed(4)
@@ -180,6 +215,7 @@ export default function Dashboard() {
                   )}
                   width="40"
                   height="60"
+                  alt="native asset"
                 />
                 <p>
                   {protocolProfitOnThisChain

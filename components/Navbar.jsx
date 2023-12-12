@@ -62,8 +62,8 @@ export default function Navbar() {
               {truncateEthereumAddress(user)}
             </div>
           ) : (
-            connectors.map((connector) => (
-              <button onClick={() => connect({ connector })}>
+            connectors.map((connector, index) => (
+              <button key={index} onClick={() => connect({ connector })}>
                 Connect Wallet
               </button>
             ))

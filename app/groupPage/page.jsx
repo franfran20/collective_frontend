@@ -264,6 +264,7 @@ export default function GroupSavings() {
                         onClick={() => {
                           setSelectedGroup(group.groupID.toString());
                         }}
+                        key={index}
                       >
                         <div className="top">
                           <div>
@@ -285,7 +286,7 @@ export default function GroupSavings() {
 
                   if (index + 1 == allGroups.length) {
                     if (counter == 0) {
-                      return <div>No Ongoing Group Savings</div>;
+                      return <div key={index}>No Ongoing Group Savings</div>;
                     }
                   }
                 })}
@@ -311,6 +312,7 @@ export default function GroupSavings() {
                         onClick={() =>
                           setSelectedGroup(group.groupID.toString())
                         }
+                        key={index}
                       >
                         <div className="top">
                           <div>
@@ -332,7 +334,7 @@ export default function GroupSavings() {
 
                   if (index + 2 == allGroups.length) {
                     if (counter == 0) {
-                      return <div>No Completed Group Savings</div>;
+                      return <div key={index}>No Completed Group Savings</div>;
                     }
                   }
                 })}

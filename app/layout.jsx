@@ -10,7 +10,7 @@ export default function RootLayout({ children }) {
     <html>
       <body className={spaceGrotesk.className}>
         <div className="app-container">
-          <Provider children={children}></Provider>
+          <Provider>{children}</Provider>
         </div>
 
         <div className="mobile-not-supported">Mobile Devices Not Supported</div>

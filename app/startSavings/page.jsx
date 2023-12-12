@@ -560,9 +560,9 @@ export default function StartSaving() {
 
                     <h2>Withdraw Savings</h2>
                     <p>
-                      You've succesfully reached your savings target within the
-                      stipulated time you set. Congratulations! Withdraw your
-                      savings.
+                      You have succesfully reached your savings target within
+                      the stipulated time you set. Congratulations! Withdraw
+                      your savings.
                     </p>
 
                     <p>
@@ -597,9 +597,9 @@ export default function StartSaving() {
                   <div className="reached-target-not-time">
                     <h3>Congratulations! You Reached Your Saving Target!</h3>
                     <p className="reached-target-not-time-p">
-                      We're happy you've reached your saving target but you'd
-                      have to wait till the saving time is over to unlock your
-                      savings and interest.
+                      We are happy you have reached your saving target but you
+                      would have to wait till the saving time is over to unlock
+                      your savings and interest.
                     </p>
                     <p>Thanks For Saving With Us!!</p>
 
@@ -626,7 +626,7 @@ export default function StartSaving() {
                       </button>
 
                       <div className="receive-from-end">
-                        <h3>How Much You'd receive</h3>
+                        <h3>How Much You Will receive</h3>
                         <div>
                           <div>
                             <Image src="/avaxLogo.png" height="40" width="30" />
@@ -684,7 +684,7 @@ export default function StartSaving() {
                 userSavingBalance &&
                 fetchedUserShareInPool && (
                   <div className="receive-from-end">
-                    <h3>How Much You'd receive</h3>
+                    <h3>How Much You Will receive</h3>
                     <div>
                       <div>
                         <Image src="/avaxLogo.png" height="40" width="30" />
@@ -734,7 +734,7 @@ export default function StartSaving() {
                 userSavingBalance &&
                 fetchedUserShareInPool && (
                   <div className="receive-from-end">
-                    <h3>How Much You'd receive</h3>
+                    <h3>How Much You Will receive</h3>
                     <div>
                       <div>
                         <Image src="/avaxLogo.png" height="40" width="30" />
