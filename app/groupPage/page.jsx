@@ -235,7 +235,7 @@ export default function GroupSavings() {
             setSelectedGroup(false);
           }}
         >
-          Join
+          Search
         </p>
       </div>
 
